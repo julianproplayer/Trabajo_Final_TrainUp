@@ -1,6 +1,6 @@
 // VolumenDiaScreen.tsx
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, BackHandler, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, BackHandler, FlatList, Image, Button } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation';
@@ -33,6 +33,9 @@ export default function VolumenDiaScreen({ navigation, route }: Props) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.backButton}>
+        <Button title='← Volver' onPress={() => navigation.goBack()}/>
+      </View>
       <Text style={styles.title}>Rutina de {day} 💪</Text>
       <FlatList
         data={exercises}
@@ -57,9 +60,15 @@ export default function VolumenDiaScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex:1, padding:20, backgroundColor:"#fff" },
-  title: { fontSize:22, fontWeight:"bold", marginBottom:20, textAlign:"center" },
+  title: { fontSize:22, fontWeight:"bold", marginBottom:50, textAlign:"center" },
   card: { marginBottom:15, padding:15, borderWidth:1, borderRadius:8, borderColor:"#ccc" },
   exercise: { fontSize:18, fontWeight:"600", marginBottom:5 },
   description: { fontSize:14, color:"#333" },
-  exerciseImage: { width: 250, height: 250, marginTop: 10, alignSelf: "center" }
+  exerciseImage: { width: 250, height: 250, marginTop: 10, alignSelf: "center" },
+  backButton: {
+    position:"absolute",
+    top:50,   // lo baja un poco para que no quede pegado al notch
+    left:10,  // lo empuja a la izquierda
+    alignSelf:"flex-start"
+  }
 });

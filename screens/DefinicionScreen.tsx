@@ -85,6 +85,9 @@ export default function VolumenScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.backButton}>
+        <Button title='← Volver' onPress={() => navigation.goBack()}/>
+      </View>
       <Text style={styles.title}>Rutina de Definición 💪</Text>
       <Button title="Reajustar semana ➡️" onPress={shiftRoutines} />
       <Text style={styles.text}>Mueve los ejercicios 1 dia por cada toque, para ajustar la rutina en caso de no hacerla</Text>
@@ -106,7 +109,13 @@ export default function VolumenScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex:1, padding:20, backgroundColor:"#fff" },
-  title: { fontSize:22, fontWeight:"bold", marginBottom:20, textAlign:"center" },
+  title: { fontSize:22, fontWeight:"bold", marginBottom:50, textAlign:"center" },
   text: { fontSize:14},
-  card: { marginBottom:15 }
+  card: { marginBottom:15 },
+  backButton: {
+    position:"absolute",
+    top:55,   // lo baja un poco para que no quede pegado al notch
+    left:10,  // lo empuja a la izquierda
+    alignSelf:"flex-start"
+  }
 });

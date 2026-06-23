@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, BackHandler, Button } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
@@ -33,6 +33,11 @@ export default function PerfilScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Botón arriba a la izquierda */}
+      <View style={styles.backButton}>
+        <Button title="← Volver" onPress={() => navigation.goBack()} />
+      </View>
+
       <Text style={styles.title}>Perfil del Usuario 👤</Text>
       {user ? (
         <>
@@ -52,5 +57,11 @@ export default function PerfilScreen() {
 
 const styles = StyleSheet.create({
   container: { flex:1, justifyContent:"center", alignItems:"center", backgroundColor:"#fff" },
-  title: { fontSize:22, marginBottom:20, fontWeight:"bold" }
+  title: { fontSize:22, marginBottom:20, fontWeight:"bold" },
+  backButton: {
+    position:"absolute",
+    top:40,   // lo baja un poco para que no quede pegado al notch
+    left:10,  // lo empuja a la izquierda
+    alignSelf:"flex-start"
+  }
 });
