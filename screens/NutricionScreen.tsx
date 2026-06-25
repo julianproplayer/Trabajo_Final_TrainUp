@@ -119,7 +119,6 @@ export default function NutricionScreen({ navigation }: Props) {
         </View>
 
         {/* Alimentos recomendados */}
-{/* Alimentos recomendados */}
         <View style={styles.foodBox}>
           <Text style={styles.title}>Alimentos recomendados (origen animal)</Text>
           <Text style={styles.foodItem}>🐔 Pechuga de pollo (100 g) — 165 kcal</Text>
