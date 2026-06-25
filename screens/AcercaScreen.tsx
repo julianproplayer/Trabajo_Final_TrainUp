@@ -27,7 +27,7 @@ export default function AcercaScreen ({ navigation }: Props) {
               <Button title="← Volver" onPress={() => navigation.goBack()} />
             </View>
 
-            <Text style={styles.version}>Versión 0.6.0 Revisión 1</Text>
+            <Text style={styles.version}>Versión 1.0.0 Revisión 1</Text>
             <Text style={styles.title}>Acerca de</Text>
             <Text style={styles.text}>
               TrainUp es la aplicación de entrenamiento creada por la cadena de gimnasios TrainUp, 

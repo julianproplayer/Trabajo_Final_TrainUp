@@ -65,7 +65,7 @@ export default function LoginScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.appName}>TrainUp</Text>
-      <Text style={styles.version}>Versión 0.6.0 Revisión 1</Text>
+      <Text style={styles.version}>Versión 1.0.0 Revisión 1</Text>
 
       <View style={styles.content}>
         <Text>Registro / Login</Text>
