@@ -15,6 +15,7 @@ export default function NutricionScreen({ navigation }: Props) {
   const [imc, setImc] = useState<number | null>(null);
   const [genero, setGenero] = useState<string>('');
   const [calorias, setCalorias] = useState<{label:string, value:number, color:string}[]>([]);
+  const [macros, setMacros] = useState<{label:string, value:string, color:string}[]>([]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -32,25 +33,38 @@ export default function NutricionScreen({ navigation }: Props) {
             const imcCalc = peso / Math.pow(altura / 100, 2);
             setImc(Number(imcCalc.toFixed(2)));
 
-            // 🔥 Calculadora calórica con Mifflin-St Jeor simplificada
-            const edad = 20; // valor fijo para simplificar
+            // 🔥 Calorías con Mifflin-St Jeor simplificada
+            const edad = 20;
             let bmr = 0;
             if (generoUser === "Hombre") {
               bmr = 10 * peso + 6.25 * altura - 5 * edad + 5;
             } else {
               bmr = 10 * peso + 6.25 * altura - 5 * edad - 161;
             }
-
-            const mantenimiento = Math.round(bmr * 1.55); // factor actividad moderada
+            const mantenimiento = Math.round(bmr * 1.55);
 
             const tabla = [
-              { label: "Gran déficit", value: mantenimiento - 417, color: "#ff4d4d" },
+              { label: "Gran déficit", value: mantenimiento - 439, color: "#ff4d4d" },
               { label: "Déficit", value: mantenimiento - 204, color: "#ff9933" },
               { label: "Estable", value: mantenimiento, color: "#ffff66" },
               { label: "Volumen", value: mantenimiento + 216, color: "#66cc66" },
-              { label: "Gran volumen", value: mantenimiento + 437, color: "#33cc33" }
+              { label: "Gran volumen", value: mantenimiento + 432, color: "#33cc33" }
             ];
             setCalorias(tabla);
+
+            // 🔥 Macronutrientes y agua
+            let proteinas = generoUser === "Hombre" ? peso * 1.8 : peso * 1.5;
+            let carbohidratos = generoUser === "Hombre" ? peso * 4 : peso * 3.5;
+            let grasas = generoUser === "Hombre" ? peso * 1 : peso * 0.8;
+            let agua = generoUser === "Hombre" ? peso * 35 : peso * 30;
+
+            const macrosList = [
+              { label: "Proteínas", value: `${proteinas.toFixed(0)} g`, color: "#ff4d4d" }, // rojo
+              { label: "Carbohidratos", value: `${carbohidratos.toFixed(0)} g`, color: "#33cc33" }, // verde
+              { label: "Grasas saludables", value: `${grasas.toFixed(0)} g`, color: "#ffff66" }, // amarillo
+              { label: "Agua", value: `${(agua/1000).toFixed(1)} L`, color: "#00ccff" } // celeste
+            ];
+            setMacros(macrosList);
           }
         }
       }
@@ -82,9 +96,8 @@ export default function NutricionScreen({ navigation }: Props) {
         <Text style={styles.imc}>Tu IMC es: {imc} ({genero})</Text>
       )}
 
-      {/* Cuadro con borde negro y columnas */}
       <View>
-        <Text style={styles.title}>Cuadro calorico</Text>
+        <Text style={styles.title}>Cuadro calórico</Text>
       </View>
       <View style={styles.tableBox}>
         {calorias.map((c, idx) => (
@@ -94,13 +107,24 @@ export default function NutricionScreen({ navigation }: Props) {
           </View>
         ))}
       </View>
+
+      {/* Listado de macros debajo con puntos de color */}
+      <View style={styles.macrosBox}>
+        <Text style={styles.title}>Macronutrientes y agua</Text>
+        {macros.map((m, idx) => (
+          <View key={idx} style={styles.macroRow}>
+            <View style={[styles.dot, {backgroundColor:m.color}]} />
+            <Text style={styles.macroItem}>{m.label}: {m.value}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex:1, justifyContent:"center", alignItems:"center", backgroundColor:"#f5f5f5" },
-  title: { fontSize:20, marginBottom:20, fontWeight:"bold" },
+  title: { fontSize:20, marginBottom:10, fontWeight:"bold" },
   imc: { fontSize:16, marginBottom:20 },
   tableBox: { 
     flexDirection:"row", 
@@ -120,5 +144,9 @@ const styles = StyleSheet.create({
     borderColor:"#000" 
   },
   label: { fontSize:10.66, fontWeight:"600", color:"#000", textAlign:"center", flexWrap:"nowrap" },
-  value: { fontSize:14, fontWeight:"bold", color:"#000", marginBottom:5, textAlign:"center" }
+  value: { fontSize:14, fontWeight:"bold", color:"#000", marginBottom:5, textAlign:"center" },
+  macrosBox: { marginTop:20, width:"90%", padding:10, backgroundColor:"#fff", borderRadius:8, borderWidth:1, borderColor:"#ccc" },
+  macroRow: { flexDirection:"row", alignItems:"center", marginVertical:4 },
+  dot: { width:12, height:12, borderRadius:6, marginRight:8 },
+  macroItem: { fontSize:14, color:"#333" }
 });
