@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Alert, BackHandler, ToastAndroid, StyleSheet } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  Alert, 
+  BackHandler, 
+  ToastAndroid, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView,
+  Image // 1. Agregamos Image aquí
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
@@ -29,7 +42,6 @@ export default function LoginScreen({ navigation }: Props) {
     return () => backHandler.remove();
   }, [backPressedOnce]);
 
-  // 👉 Nuevo flujo de registro: navega a MetricasScreen
   const goToRegister = async () => {
     if (!username || !password) {
       Alert.alert("Error", "Completa usuario y contraseña");
@@ -48,7 +60,6 @@ export default function LoginScreen({ navigation }: Props) {
     if (saved) {
       const userData = JSON.parse(saved);
       if (userData.password === password) {
-        // Guardamos la referencia del usuario actual
         await AsyncStorage.setItem("currentUser", `user_${username}`);
         navigation.reset({
           index: 0,
@@ -63,36 +74,158 @@ export default function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.appName}>TrainUp</Text>
-      <Text style={styles.version}>Versión 1.0.0 Revisión 1</Text>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer} bounces={false}>
+        
+        {/* Encabezado */}
+        <View style={styles.header}>
+          {/* 2. Renderizamos el logo aquí */}
+          <Image 
+            source={require('../assets/logo_TrainUp.png')} 
+            style={styles.logo} 
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>TrainUp</Text>
+          <Text style={styles.subtitle}>Supera tus límites desde hoy</Text>
+        </View>
 
-      <View style={styles.content}>
-        <Text>Registro / Login</Text>
-        <TextInput
-          placeholder="Usuario"
-          value={username}
-          onChangeText={setUsername}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Contraseña"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-        />
-        <Button title="Registrar" onPress={goToRegister} />
-        <Button title="Iniciar sesión" onPress={login} />
-      </View>
-    </View>
+        {/* Tarjeta de Formulario */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Ingresa a tu cuenta</Text>
+          
+          <TextInput
+            placeholder="Usuario"
+            placeholderTextColor="#999"
+            value={username}
+            onChangeText={setUsername}
+            style={styles.input}
+            autoCapitalize="none"
+          />
+          
+          <TextInput
+            placeholder="Contraseña"
+            placeholderTextColor="#999"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            style={styles.input}
+            autoCapitalize="none"
+          />
+
+          {/* Botón Principal (Login) */}
+          <TouchableOpacity style={styles.primaryButton} onPress={login}>
+            <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
+          </TouchableOpacity>
+
+          {/* Botón Secundario (Registro) */}
+          <TouchableOpacity style={styles.secondaryButton} onPress={goToRegister}>
+            <Text style={styles.secondaryButtonText}>¿No tienes cuenta? Regístrate</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Footer con versión */}
+        <Text style={styles.version}>v1.0.0 (Rev. 1)</Text>
+
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex:1, backgroundColor:"#fff" },
-  appName: { marginTop:40, marginLeft:10, fontSize:24, fontWeight:"bold", color:"#333", alignSelf:"flex-start" },
-  version: { marginTop:40, textAlign:"center", fontSize:16, color:"#888" },
-  content: { flex:1, justifyContent:"center", alignItems:"center" },
-  input: { borderWidth:1, margin:5, width:200, padding:8 }
+  container: { 
+    flex: 1, 
+    backgroundColor: "#1A1A24" 
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  header: {
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  // 3. Estilos aplicados al logo
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
+  },
+  appName: { 
+    fontSize: 42, 
+    fontWeight: "900", 
+    color: "#00FF66", 
+    letterSpacing: 1.5,
+    textTransform: 'uppercase'
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#AEAEB2',
+    marginTop: 4,
+  },
+  card: {
+    backgroundColor: '#2C2C3E', 
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.30,
+    shadowRadius: 4.65,
+    elevation: 8,
+    marginVertical: 20,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFF',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  input: { 
+    backgroundColor: '#3A3A50',
+    color: '#FFF',
+    borderRadius: 12, 
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  primaryButton: {
+    backgroundColor: '#00FF66',
+    borderRadius: 12,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginTop: 10,
+    shadowColor: "#00FF66",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  primaryButtonText: {
+    color: '#1A1A24',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  secondaryButton: {
+    marginTop: 20,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#00FF66',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  version: { 
+    textAlign: "center", 
+    fontSize: 12, 
+    color: "#636366",
+    marginTop: 10
+  }
 });
