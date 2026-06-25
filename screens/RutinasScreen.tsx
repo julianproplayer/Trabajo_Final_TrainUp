@@ -17,10 +17,7 @@ export default function RutinasScreen({ navigation }: Props) {
   const [steps, setSteps] = useState(0);
   const [meters, setMeters] = useState(0);
 
-  const STEP_LENGTH = 0.75; // longitud promedio en metros
-  
-  // Umbral de aceleración (en fuerza G). 
-  // 1.0 es la gravedad normal en reposo. Un paso suele superar los 1.35 ~ 1.4G.
+  const STEP_LENGTH = 0.75; 
   const STEP_THRESHOLD = 1.38; 
 
   // Manejo del botón atrás en Android
@@ -41,29 +38,21 @@ export default function RutinasScreen({ navigation }: Props) {
     return () => backHandler.remove();
   }, [backPressedOnce]);
 
-  // Limpieza automática al salir de la pantalla
   useEffect(() => {
     return () => stopAccelerometer();
   }, [subscription]);
 
-  // Activar acelerómetro
   const startAccelerometer = () => {
     if (subscription) return;
-
-    // 100ms es el punto dulce para capturar pasos sin drenar la batería excesivamente
     Accelerometer.setUpdateInterval(100);
-
     let lastStepTime = 0;
 
     const sub = Accelerometer.addListener(accelerometerData => {
       setData(accelerometerData);
       const { x, y, z } = accelerometerData;
-
-      // Calcular la fuerza G total usando la norma vectorial: √(x² + y² + z²)
       const totalForce = Math.sqrt(x * x + y * y + z * z);
-
       const now = Date.now();
-      // Filtro de rebote: Evita que un solo paso largo sume 2 o 3 veces seguidas (mínimo 350ms entre pasos)
+      
       if (totalForce > STEP_THRESHOLD && now - lastStepTime > 350) {
         lastStepTime = now;
         setSteps(prev => {
@@ -73,11 +62,9 @@ export default function RutinasScreen({ navigation }: Props) {
         });
       }
     });
-    
     setSubscription(sub);
   };
 
-  // Detener acelerómetro
   const stopAccelerometer = () => {
     if (subscription) {
       subscription.remove();
@@ -85,8 +72,26 @@ export default function RutinasScreen({ navigation }: Props) {
     }
   };
 
+  // Renderizador de líneas de texto de fondo para simular la imagen diagonal
+  const renderBackgroundWatermark = () => {
+    const lines = Array(12).fill("TrainUp   TrainUp   TrainUp   TrainUp");
+    return (
+      <View style={styles.watermarkContainer} pointerEvents="none">
+        {lines.map((text, index) => (
+          <Text key={index} style={styles.watermarkText}>
+            {text}
+          </Text>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
+      {/* Componente de fondo en diagonal */}
+      {renderBackgroundWatermark()}
+
+      {/* Contenido principal por encima del fondo */}
       <Text style={styles.title}>Tus Rutinas 🏋️</Text>
       <View style={styles.buttons}>
         <Button title="Volumen" onPress={() => navigation.navigate('Volumen')} />
@@ -114,9 +119,29 @@ export default function RutinasScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex:1, justifyContent:"center", alignItems:"center", backgroundColor:"#f5f5f5" },
-  title: { fontSize:20, marginBottom:30 },
-  buttons: { gap:15 },
-  sensorBox: { marginTop:40, alignItems:"center", backgroundColor: '#fff', padding: 20, borderRadius: 10, elevation: 2 },
+  
+  // Estilos específicos para la marca de agua en diagonal sin usar imágenes externas
+  watermarkContainer: {
+    position: 'absolute',
+    top: -50,
+    left: -100,
+    right: -100,
+    bottom: -50,
+    opacity: 0.04, // Ajusta la visibilidad (0.01 a 0.1) según qué tan sutil lo quieras
+    transform: [{ rotate: '-25deg' }], // Aplica la inclinación diagonal a todo el bloque
+    justifyContent: 'space-around',
+  },
+  watermarkText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#000',
+    letterSpacing: 4,
+    textAlign: 'center',
+  },
+
+  title: { fontSize:20, marginBottom:30, fontWeight: 'bold' },
+  buttons: { gap:15, width: '60%' },
+  sensorBox: { marginTop:40, alignItems:"center", backgroundColor: '#fff', padding: 20, borderRadius: 10, elevation: 5 },
   sensorTitle: { fontSize:16, fontWeight: 'bold', marginBottom:10 },
   stepCount: { fontSize: 22, color: '#007AFF', fontWeight: 'bold', marginTop: 10 },
   distance: { fontSize: 18, color: '#333' }
