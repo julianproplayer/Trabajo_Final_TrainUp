@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, BackHandler, ToastAndroid, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -10,12 +10,104 @@ type Props = {
   navigation: NutricionScreenNavigationProp;
 }
 
+// 📦 Banco de alimentos (10 opciones por categoría para simular el 1/10 de probabilidad)
+const FOOD_POOL = {
+  animal: [
+    "🐔 Pechuga de pollo (100 g) — 165 kcal",
+    "🥩 Carne vacuna magra (100 g) — 250 kcal",
+    "🐟 Salmón (100 g) — 208 kcal",
+    "🥚 Huevo (50 g, 1 unidad) — 70 kcal",
+    "🥛 Yogur natural (100 g) — 60 kcal",
+    "🧀 Queso fresco (50 g) — 130 kcal",
+    "🐟 Atún en agua (100 g) — 116 kcal",
+    "🥩 Pechuga de Pavo (100 g) — 135 kcal",
+    "🍤 Camarones (100 g) — 99 kcal",
+    "🥛 Leche descremada (200 ml) — 90 kcal"
+  ],
+  cereales: [
+    "🍚 Arroz (100 g cocido) — 130 kcal",
+    "🥔 Papa (100 g cocida) — 77 kcal",
+    "🌽 Maíz (100 g) — 96 kcal",
+    "🍞 Pan integral (50 g) — 120 kcal",
+    "🌾 Avena (50 g) — 190 kcal",
+    "🍠 Batata (100 g) — 86 kcal",
+    "🍝 Fideos integrales (100 g) — 124 kcal",
+    "🌾 Quinoa (100 g cocida) — 120 kcal",
+    "🍪 Galletas de arroz (2 unidades) — 60 kcal",
+    "🌾 Salvado de avena (30 g) — 102 kcal"
+  ],
+  verduras: [
+    "🥦 Brócoli (100 g) — 34 kcal",
+    "🥕 Zanahoria (100 g) — 41 kcal",
+    "🥬 Espinaca (100 g) — 23 kcal",
+    "🍅 Tomate (100 g) — 18 kcal",
+    "🥒 Pepino (100 g) — 15 kcal",
+    "🥬 Lechuga (100 g) — 15 kcal",
+    "🫑 Morrón / Pimiento (100 g) — 20 kcal",
+    "🎃 Zapallo / Calabaza (100 g) — 26 kcal",
+    "🌱 Espárragos (100 g) — 20 kcal",
+    "🍄 Champiñones (100 g) — 22 kcal"
+  ],
+  frutas: [
+    "🍎 Manzana (100 g) — 52 kcal",
+    "🍌 Banana (100 g) — 89 kcal",
+    "🍊 Naranja (100 g) — 47 kcal",
+    "🍇 Uvas (100 g) — 69 kcal",
+    "🍓 Frutillas / Fresas (100 g) — 32 kcal",
+    "🥑 Palta / Aguacate (50 g) — 80 kcal",
+    "🍍 Piña / Ananá (100 g) — 50 kcal",
+    "🥝 Kiwi (100 g) — 61 kcal",
+    "🍑 Durazno (100 g) — 39 kcal",
+    "🍉 Sandía (100 g) — 30 kcal"
+  ],
+  legumbres: [
+    "🌱 Lentejas (100 g cocidas) — 116 kcal",
+    "🫘 Garbanzos (100 g cocidos) — 164 kcal",
+    "🫘 Porotos / Frijoles negros (100 g) — 132 kcal",
+    "🫛 Arvejas / Guisantes (100 g) — 81 kcal",
+    "🌱 Soja texturizada (30 g en seco) — 105 kcal",
+    "🌱 Habas (100 g cocidas) — 110 kcal",
+    "🫘 Alubias blancas (100 g cocidas) — 139 kcal",
+    "🌱 Cacahuates / Maní (15 g) — 85 kcal",
+    "🌰 Almendras (15 g) — 88 kcal",
+    "🌰 Nueces (15 g) — 98 kcal"
+  ],
+  permitidos: [
+    "🍫 Chocolate negro (20 g) — 110 kcal",
+    "🍪 Galleta simple (25 g) — 120 kcal",
+    "🥧 Porción pequeña de torta (50 g) — 180 kcal",
+    "🍯 Miel (15 g, 1 cucharada) — 50 kcal",
+    "🍦 Helado (50 g, 1 bola) — 100 kcal",
+    "🥤 Bebida azucarada (150 ml) — 60 kcal",
+    "🍿 Pochoclos / Palomitas (20 g) — 75 kcal",
+    "🍮 Flun casero (50 g) — 72 kcal",
+    "🍩 Mini dona (1 unidad) — 115 kcal",
+    "🍬 Caramelos masticables (3 unidades) — 60 kcal"
+  ]
+};
+
 export default function NutricionScreen({ navigation }: Props) {
   const [backPressedOnce, setBackPressedOnce] = useState(false);
   const [imc, setImc] = useState<number | null>(null);
   const [genero, setGenero] = useState<string>('');
   const [calorias, setCalorias] = useState<{label:string, value:number, color:string}[]>([]);
   const [macros, setMacros] = useState<{label:string, value:string, color:string}[]>([]);
+  
+  // ⚡ Estados para almacenar las comidas seleccionadas del día
+  const [selectedFoods, setSelectedFoods] = useState({
+    animal: [] as string[],
+    cereales: [] as string[],
+    verduras: [] as string[],
+    frutas: [] as string[],
+    legumbres: [] as string[],
+    permitidos: [] as string[]
+  });
+
+  // Función auxiliar para obtener N elementos aleatorios sin repetir de un arreglo
+  const getRandomElements = (arr: string[], count: number) => {
+    const shuffled = [...arr].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
 
   useEffect(() => {
     const loadUser = async () => {
@@ -33,7 +125,6 @@ export default function NutricionScreen({ navigation }: Props) {
             const imcCalc = peso / Math.pow(altura / 100, 2);
             setImc(Number(imcCalc.toFixed(2)));
 
-            // 🔥 Calorías con Mifflin-St Jeor simplificada
             const edad = 20;
             let bmr = 0;
             if (generoUser === "Hombre") {
@@ -52,7 +143,6 @@ export default function NutricionScreen({ navigation }: Props) {
             ];
             setCalorias(tabla);
 
-            // 🔥 Macronutrientes y agua
             let proteinas = generoUser === "Hombre" ? peso * 1.8 : peso * 1.5;
             let carbohidratos = generoUser === "Hombre" ? peso * 4 : peso * 3.5;
             let grasas = generoUser === "Hombre" ? peso * 1 : peso * 0.8;
@@ -65,6 +155,16 @@ export default function NutricionScreen({ navigation }: Props) {
               { label: "Agua", value: `${(agua/1000).toFixed(1)} L`, color: "#00ccff" }
             ];
             setMacros(macrosList);
+
+            // 🎲 Selección de alimentos aleatoria (Trae 3 diferentes de la lista de 10)
+            setSelectedFoods({
+              animal: getRandomElements(FOOD_POOL.animal, 3),
+              cereales: getRandomElements(FOOD_POOL.cereales, 3),
+              verduras: getRandomElements(FOOD_POOL.verduras, 3),
+              frutas: getRandomElements(FOOD_POOL.frutas, 3),
+              legumbres: getRandomElements(FOOD_POOL.legumbres, 2),
+              permitidos: getRandomElements(FOOD_POOL.permitidos, 1)
+            });
           }
         }
       }
@@ -107,7 +207,6 @@ export default function NutricionScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* Listado de macros debajo con puntos de color */}
         <View style={styles.macrosBox}>
           <Text style={styles.title}>Macronutrientes y agua</Text>
           {macros.map((m, idx) => (
@@ -118,52 +217,35 @@ export default function NutricionScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* Alimentos recomendados */}
+        {/* 🥗 Renderizado Dinámico de Alimentos Recomendados */}
         <View style={styles.foodBox}>
           <Text style={styles.title}>Alimentos recomendados (origen animal)</Text>
-          <Text style={styles.foodItem}>🐔 Pechuga de pollo (100 g) — 165 kcal</Text>
-          <Text style={styles.foodItem}>🥩 Carne vacuna magra (100 g) — 250 kcal</Text>
-          <Text style={styles.foodItem}>🐟 Salmón (100 g) — 208 kcal</Text>
-          <Text style={styles.foodItem}>🥚 Huevo (50 g, 1 unidad) — 70 kcal</Text>
-          <Text style={styles.foodItem}>🥛 Yogur natural (100 g) — 60 kcal</Text>
-          <Text style={styles.foodItem}>🧀 Queso fresco (50 g) — 130 kcal</Text>
+          {selectedFoods.animal.map((item, i) => <Text key={i} style={styles.foodItem}>{item}</Text>)}
         </View>
+
         <View style={styles.foodBox}>
           <Text style={styles.title}>Cereales y tubérculos</Text>
-          <Text style={styles.foodItem}>🍚 Arroz (100 g cocido) — 130 kcal</Text>
-          <Text style={styles.foodItem}>🥔 Papa (100 g cocida) — 77 kcal</Text>
-          <Text style={styles.foodItem}>🌽 Maíz (100 g) — 96 kcal</Text>
-          <Text style={styles.foodItem}>🍞 Pan integral (50 g) — 120 kcal</Text>
-          <Text style={styles.foodItem}>🌾 Avena (50 g) — 190 kcal</Text>
-          <Text style={styles.foodItem}>🍠 Batata (100 g) — 86 kcal</Text>
+          {selectedFoods.cereales.map((item, i) => <Text key={i} style={styles.foodItem}>{item}</Text>)}
         </View>
+
         <View style={styles.foodBox}>
           <Text style={styles.title}>Verduras</Text>
-          <Text style={styles.foodItem}>🥦 Brócoli (100 g) — 34 kcal</Text>
-          <Text style={styles.foodItem}>🥕 Zanahoria (100 g) — 41 kcal</Text>
-          <Text style={styles.foodItem}>🥬 Espinaca (100 g) — 23 kcal</Text>
-          <Text style={styles.foodItem}>🍅 Tomate (100 g) — 18 kcal</Text>
+          {selectedFoods.verduras.map((item, i) => <Text key={i} style={styles.foodItem}>{item}</Text>)}
         </View>
+
         <View style={styles.foodBox}>
           <Text style={styles.title}>Frutas</Text>
-           <Text style={styles.foodItem}>🍎 Manzana (100 g) — 52 kcal</Text>
-          <Text style={styles.foodItem}>🍌 Banana (100 g) — 89 kcal</Text>
-          <Text style={styles.foodItem}>🍊 Naranja (100 g) — 47 kcal</Text>
-          <Text style={styles.foodItem}>🍇 Uvas (100 g) — 69 kcal</Text>
+          {selectedFoods.frutas.map((item, i) => <Text key={i} style={styles.foodItem}>{item}</Text>)}
         </View>
+
         <View style={styles.foodBox}>
           <Text style={styles.title}>Legumbres</Text>
-          <Text style={styles.foodItem}>🌱 Lentejas (100 g cocidas) — 116 kcal</Text>
-          <Text style={styles.foodItem}>🫘 Garbanzos (100 g cocidos) — 164 kcal</Text>
+          {selectedFoods.legumbres.map((item, i) => <Text key={i} style={styles.foodItem}>{item}</Text>)}
         </View>
+
         <View style={styles.foodBox}>
           <Text style={styles.title}>Permitidos (De manera ocasional)</Text>
-          <Text style={styles.foodItem}>🍫 Chocolate negro (20 g) — 110 kcal</Text>
-          <Text style={styles.foodItem}>🍪 Galleta simple (25 g) — 120 kcal</Text>
-          <Text style={styles.foodItem}>🥧 Porción pequeña de torta (50 g) — 180 kcal</Text>
-          <Text style={styles.foodItem}>🍯 Miel (15 g, 1 cucharada) — 50 kcal</Text>
-          <Text style={styles.foodItem}>🍦 Helado (50 g, 1 bola) — 100 kcal</Text>
-          <Text style={styles.foodItem}>🥤 Bebida azucarada (150 ml) — 60 kcal</Text>
+          {selectedFoods.permitidos.map((item, i) => <Text key={i} style={styles.foodItem}>{item}</Text>)}
         </View>
       </View>
     </ScrollView>

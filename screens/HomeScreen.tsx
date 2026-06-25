@@ -27,7 +27,7 @@ export default function HomeScreen({ navigation }: Props) {
         }
         const savedImage = await AsyncStorage.getItem(`${currentUserKey}_avatar`);
         if (savedImage) {
-          setProfileImage(savedImage);
+          setProfileImage(savedImage); // Aquí cargará el string Base64 permanente
         }
       }
     };
@@ -62,16 +62,22 @@ export default function HomeScreen({ navigation }: Props) {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
+      quality: 0.4,       // Bajamos un pelo la calidad (0.4) para optimizar el tamaño en el almacenamiento
+      base64: true,       // 🔥 ¡CRUCIAL! Le pedimos a Expo que convierta la foto a texto plano
     });
 
-    if (!result.canceled && result.assets && result.assets[0].uri) {
-      const imageUri = result.assets[0].uri;
-      setProfileImage(imageUri);
+    if (!result.canceled && result.assets && result.assets[0]) {
+      const asset = result.assets[0];
+      
+      // Creamos el formato Data URI correcto para renderizar un Base64 en el componente Image
+      const base64Image = `data:image/jpeg;base64,${asset.base64}`;
+      
+      setProfileImage(base64Image);
 
       const currentUserKey = await AsyncStorage.getItem('currentUser');
       if (currentUserKey) {
-        await AsyncStorage.setItem(`${currentUserKey}_avatar`, imageUri);
+        // Guardamos el string completo. No se borrará jamás al reiniciar o cerrar sesión.
+        await AsyncStorage.setItem(`${currentUserKey}_avatar`, base64Image);
       }
     }
   };
@@ -87,13 +93,11 @@ export default function HomeScreen({ navigation }: Props) {
   );
 
   return (
-    // Reemplazamos el View principal por un ScrollView
     <ScrollView 
       style={styles.container} 
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Sección del Avatar Táctil */}
       <TouchableOpacity style={styles.avatarContainer} onPress={tomarFotoPerfil}>
         {profileImage ? (
           <Image source={{ uri: profileImage }} style={styles.avatar} />
@@ -127,7 +131,6 @@ export default function HomeScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
-  // Usamos contentContainerStyle para centrar el contenido de forma segura al hacer scroll
   scrollContent: { alignItems: "center", padding: 20, paddingTop: 40, paddingBottom: 40 },
   avatarContainer: { position: 'relative', marginBottom: 15, elevation: 4 },
   avatar: { width: 110, height: 110, borderRadius: 55, borderWidth: 3, borderColor: '#fff' },
