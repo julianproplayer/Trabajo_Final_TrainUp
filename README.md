@@ -10,7 +10,7 @@ password: Hola1234
 user: Andypiano
 password: Andypiano
 
-user: Anamariat
+user: Anamaria
 password: 123456
 
 user: Anamaria1
